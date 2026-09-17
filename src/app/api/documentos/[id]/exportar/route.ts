@@ -42,7 +42,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     if (formato === 'docx') {
       const buffer = await gerarDocxDocumento({ titulo: documento.titulo, subtitulo, texto: documento.texto_trabalho });
-      return new NextResponse(buffer, {
+      return new NextResponse(new Uint8Array(buffer), {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'Content-Disposition': `attachment; filename="${nomeArquivo(documento.titulo, 'docx')}"`,
@@ -51,7 +51,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const buffer = await gerarPdfDocumento({ titulo: documento.titulo, subtitulo, texto: documento.texto_trabalho });
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${nomeArquivo(documento.titulo, 'pdf')}"`,
