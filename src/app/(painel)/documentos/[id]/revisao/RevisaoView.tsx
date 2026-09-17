@@ -275,6 +275,14 @@ export function RevisaoView({
           <div>
             <span style={{ color: '#7A6A65', fontWeight: 600, fontSize: 15 }}>{pontosDeJulgamentoHumano.length}</span> exigem julgamento humano
           </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
+            <a href={`/api/documentos/${documento.id}/exportar?formato=docx`} className="btn btn-secondary" style={{ fontSize: 12.5 }}>
+              Baixar .docx
+            </a>
+            <a href={`/api/documentos/${documento.id}/exportar?formato=pdf`} className="btn btn-secondary" style={{ fontSize: 12.5 }}>
+              Baixar .pdf
+            </a>
+          </div>
         </div>
       </header>
 
