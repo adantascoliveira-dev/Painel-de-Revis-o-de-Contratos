@@ -1,0 +1,12 @@
+# Supabase
+.branches
+.temp
+
+# Dados reais de clientes usados só para desenvolvimento local (ver seed.example.sql
+# para um template sem dados reais).
+seed.sql
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
