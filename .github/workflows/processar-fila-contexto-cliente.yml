@@ -1,0 +1,27 @@
+name: Processar fila de contexto do cliente
+
+# O Cron nativo da Vercel (vercel.json) só roda 1x/dia no plano Hobby — baixo
+# demais para uma fila que alimenta a checagem de uma minuta recém-enviada.
+# Este workflow chama a mesma rota a cada 5 minutos, sem custo (Actions em
+# repositório público não consome minutos da cota), garantindo que a análise
+# de contexto do cliente (categoria 5) saia da fila em minutos, não em até 24h.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  processar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar o worker
+        run: |
+          resposta=$(curl -s -o /tmp/resposta.json -w "%{http_code}" \
+            -X POST "https://painel-revisao-contratos.vercel.app/api/jobs/contexto-cliente" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          echo "status HTTP: $resposta"
+          cat /tmp/resposta.json
+          if [ "$resposta" != "200" ]; then
+            echo "Worker retornou status inesperado."
+            exit 1
+          fi
