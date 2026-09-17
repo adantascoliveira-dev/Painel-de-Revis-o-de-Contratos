@@ -28,13 +28,21 @@ const ICONES = {
       <circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M17 11a3 3 0 1 0 0-6" /><path d="M18.5 20a6 6 0 0 0-3-5.2" />
     </svg>
   ),
+  reconciliacao: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 3l4 4-4 4" /><path d="M21 7H9a4 4 0 0 0-4 4v1" /><path d="M7 21l-4-4 4-4" /><path d="M3 17h12a4 4 0 0 0 4-4v-1" />
+    </svg>
+  ),
 };
 
 const ITENS = [
-  { href: '/novo-documento', label: 'Novo documento', icone: 'novo' as const, contador: undefined as 'emChecagem' | 'aguardandoSocio' | undefined },
-  { href: '/documentos?status=em_checagem', label: 'Comparação e checagem', icone: 'checagem' as const, contador: 'emChecagem' as const },
-  { href: '/documentos?status=aguardando_socio', label: 'Revisão final', icone: 'revisao' as const, contador: 'aguardandoSocio' as const },
-  { href: '/historico', label: 'Histórico e equipe', icone: 'historico' as const, contador: undefined },
+  { href: '/novo-documento', label: 'Novo documento', icone: 'novo' as const, contador: undefined as 'emChecagem' | 'aguardandoSocio' | undefined, papeis: null as Usuario['perfil'][] | null },
+  { href: '/documentos?status=em_checagem', label: 'Comparação e checagem', icone: 'checagem' as const, contador: 'emChecagem' as const, papeis: null },
+  { href: '/documentos?status=aguardando_socio', label: 'Revisão final', icone: 'revisao' as const, contador: 'aguardandoSocio' as const, papeis: null },
+  { href: '/historico', label: 'Histórico e equipe', icone: 'historico' as const, contador: undefined, papeis: null },
+  // A RLS de fontes_reconciliacao já esconde os dados de estagiário — o item some da
+  // navegação pro mesmo público, pra não levar a uma tela sempre vazia.
+  { href: '/reconciliacao', label: 'Reconciliação de clientes', icone: 'reconciliacao' as const, contador: undefined, papeis: ['advogado', 'socio'] as Usuario['perfil'][] },
 ];
 
 const ROTULO_PERFIL: Record<Usuario['perfil'], string> = {
@@ -87,7 +95,7 @@ export function Sidebar({
       </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '16px 12px', flex: 1 }}>
-        {ITENS.map((item) => {
+        {ITENS.filter((item) => !item.papeis || item.papeis.includes(usuario.perfil)).map((item) => {
           const ativo = pathname.startsWith(item.href.split('?')[0]) && (item.href !== '/novo-documento' || pathname === '/novo-documento');
           const contador = item.contador ? contadores[item.contador] : undefined;
           return (
