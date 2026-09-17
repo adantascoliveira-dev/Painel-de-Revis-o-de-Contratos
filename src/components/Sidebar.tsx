@@ -3,8 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Notificacoes } from '@/components/Notificacoes';
 import { criarClienteNavegador } from '@/lib/supabase/browser';
-import type { Usuario } from '@/types/database.types';
+import type { Notificacao, Usuario } from '@/types/database.types';
 
 const ICONES = {
   novo: (
@@ -45,9 +46,11 @@ const ROTULO_PERFIL: Record<Usuario['perfil'], string> = {
 export function Sidebar({
   usuario,
   contadores,
+  notificacoesIniciais,
 }: {
   usuario: Usuario;
   contadores: { emChecagem: number; aguardandoSocio: number };
+  notificacoesIniciais: Notificacao[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -73,7 +76,10 @@ export function Sidebar({
       }}
     >
       <div style={{ padding: '26px 22px 22px', borderBottom: '1px solid rgba(255,255,255,0.14)' }}>
-        <Image src="/assets/logo-horizontal-negativa.png" alt="Braga e Dantas Advogados" width={190} height={46} priority />
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <Image src="/assets/logo-horizontal-negativa.png" alt="Braga e Dantas Advogados" width={190} height={46} priority />
+          <Notificacoes iniciais={notificacoesIniciais} />
+        </div>
         <div style={{ marginTop: 16, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#B6A9A6', fontWeight: 600 }}>
           Painel de revisão
         </div>
