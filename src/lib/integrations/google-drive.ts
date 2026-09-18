@@ -66,6 +66,11 @@ async function listarFilhos(pastaId: string, token: string): Promise<ArquivoDriv
       q: `'${pastaId}' in parents and trashed = false`,
       fields: 'nextPageToken, files(id, name, mimeType, modifiedTime, parents)',
       pageSize: '200',
+      // A pasta raiz de clientes é um Drive Compartilhado — sem esses dois
+      // parâmetros a API do Drive simplesmente omite os itens dele do
+      // resultado (sem erro nenhum, só volta vazio).
+      supportsAllDrives: 'true',
+      includeItemsFromAllDrives: 'true',
     });
     if (pageToken) params.set('pageToken', pageToken);
 
