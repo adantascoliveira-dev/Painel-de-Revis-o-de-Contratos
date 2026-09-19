@@ -6,6 +6,11 @@ import { sincronizarFontesReconciliacao } from '@/lib/services/reconciliacao';
 import { criarClienteAdmin } from '@/lib/supabase/admin';
 import { criarClienteServidor } from '@/lib/supabase/server';
 
+// Rede de segurança além da paralelização em listarPastasDeClientes e
+// sincronizarFontesReconciliacao — já vimos essa raiz passar de 100 pastas em
+// produção, e sequencial (a versão anterior) estourava o tempo de resposta.
+export const maxDuration = 60;
+
 /**
  * Lê a árvore de planejamento patrimonial e sucessório no Google Drive e
  * alimenta a tela de reconciliação. Não escreve em "clientes" diretamente.

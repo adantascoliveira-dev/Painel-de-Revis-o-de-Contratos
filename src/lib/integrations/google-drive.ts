@@ -1,4 +1,5 @@
 import { createSign } from 'node:crypto';
+import { mapComLimite } from '@/lib/utils/concorrencia';
 
 const ESCOPO_LEITURA = 'https://www.googleapis.com/auth/drive.readonly';
 const MIME_PASTA = 'application/vnd.google-apps.folder';
@@ -109,10 +110,11 @@ export async function listarPastasDeClientes(): Promise<PastaClienteDrive[]> {
   const token = await obterTokenAcessoGoogle();
   const subpastas = (await listarFilhos(pastaRaizId, token)).filter((f) => f.mimeType === MIME_PASTA);
 
-  const resultado: PastaClienteDrive[] = [];
-  for (const pasta of subpastas) {
+  // A raiz de clientes já teve mais de 100 subpastas em produção — sequencial
+  // (uma chamada por vez) estoura o tempo de resposta. 8 em paralelo é rápido
+  // sem arriscar limite de taxa da API do Drive.
+  return mapComLimite(subpastas, 8, async (pasta) => {
     const arquivos = await listarFilhos(pasta.id, token);
-    resultado.push({ nome: pasta.name, pastaId: pasta.id, arquivos: arquivos.filter((a) => a.mimeType !== MIME_PASTA) });
-  }
-  return resultado;
+    return { nome: pasta.name, pastaId: pasta.id, arquivos: arquivos.filter((a) => a.mimeType !== MIME_PASTA) };
+  });
 }

@@ -1,3 +1,5 @@
+import { mapComLimite } from '@/lib/utils/concorrencia';
+
 const BASE_URL = 'https://api.clickup.com/api/v2';
 
 function token(): string {
@@ -53,12 +55,12 @@ export async function listarListasComoClientesCandidatos(): Promise<ListaClickUp
 
   const { spaces } = await chamarClickUp<{ spaces: ClickUpEspaco[] }>(`/team/${workspaceId}/space?archived=false`);
 
-  const resultado: ListaClickUp[] = [];
-  for (const espaco of spaces) {
+  const porEspaco = await mapComLimite(spaces, 5, async (espaco) => {
+    const listasDoEspaco: ListaClickUp[] = [];
     const { folders } = await chamarClickUp<{ folders: ClickUpPasta[] }>(`/space/${espaco.id}/folder?archived=false`);
     for (const pasta of folders) {
       for (const lista of pasta.lists) {
-        resultado.push({ espacoNome: espaco.name, pastaNome: pasta.name, listaId: lista.id, listaNome: lista.name });
+        listasDoEspaco.push({ espacoNome: espaco.name, pastaNome: pasta.name, listaId: lista.id, listaNome: lista.name });
       }
     }
 
@@ -66,10 +68,12 @@ export async function listarListasComoClientesCandidatos(): Promise<ListaClickUp
       `/space/${espaco.id}/list?archived=false`
     );
     for (const lista of listasSemPasta) {
-      resultado.push({ espacoNome: espaco.name, pastaNome: null, listaId: lista.id, listaNome: lista.name });
+      listasDoEspaco.push({ espacoNome: espaco.name, pastaNome: null, listaId: lista.id, listaNome: lista.name });
     }
-  }
-  return resultado;
+    return listasDoEspaco;
+  });
+
+  return porEspaco.flat();
 }
 
 /** Demandas em andamento de uma lista (cliente), para vincular cada minuta à sua task. */
