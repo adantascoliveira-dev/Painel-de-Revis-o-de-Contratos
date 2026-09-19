@@ -4,6 +4,10 @@
     {
       "path": "/api/jobs/contexto-cliente",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/jobs/reconciliacao-sync",
+      "schedule": "0 13 * * *"
     }
   ]
 }
