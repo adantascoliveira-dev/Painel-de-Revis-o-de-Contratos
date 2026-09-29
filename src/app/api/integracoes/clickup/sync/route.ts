@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { respostaDeErro } from '@/lib/api/erros';
 import { exigirUsuarioAtual } from '@/lib/auth/usuario-atual';
-import { listarListasComoClientesCandidatos } from '@/lib/integrations/clickup';
+import { listarClientesCandidatosClickUp } from '@/lib/integrations/clickup';
 import { sincronizarFontesReconciliacao } from '@/lib/services/reconciliacao';
 import { criarClienteAdmin } from '@/lib/supabase/admin';
 import { criarClienteServidor } from '@/lib/supabase/server';
 
-// Rede de segurança além da paralelização em listarListasComoClientesCandidatos
+// Rede de segurança além da paralelização em listarClientesCandidatosClickUp
 // e sincronizarFontesReconciliacao — workspaces grandes não devem, mas se
 // baterem no limite padrão do plano é melhor um erro claro do que a conexão
 // cair no meio da sincronização.
@@ -21,9 +21,9 @@ export async function POST() {
       return NextResponse.json({ erro: 'Só o sócio dispara a sincronização com o ClickUp.' }, { status: 403 });
     }
 
-    const listas = await listarListasComoClientesCandidatos();
-    const resultado = await sincronizarFontesReconciliacao(criarClienteAdmin(), { clickUp: listas });
-    return NextResponse.json({ candidatosLidos: listas.length, ...resultado });
+    const candidatos = await listarClientesCandidatosClickUp();
+    const resultado = await sincronizarFontesReconciliacao(criarClienteAdmin(), { clickUp: candidatos });
+    return NextResponse.json({ candidatosLidos: candidatos.length, ...resultado });
   } catch (erro) {
     return respostaDeErro(erro);
   }

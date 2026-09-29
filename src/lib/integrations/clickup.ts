@@ -1,5 +1,3 @@
-import { mapComLimite } from '@/lib/utils/concorrencia';
-
 const BASE_URL = 'https://api.clickup.com/api/v2';
 
 function token(): string {
@@ -16,19 +14,6 @@ async function chamarClickUp<T>(caminho: string): Promise<T> {
   return resposta.json() as Promise<T>;
 }
 
-interface ClickUpLista {
-  id: string;
-  name: string;
-}
-interface ClickUpPasta {
-  id: string;
-  name: string;
-  lists: ClickUpLista[];
-}
-interface ClickUpEspaco {
-  id: string;
-  name: string;
-}
 interface ClickUpTarefa {
   id: string;
   name: string;
@@ -37,43 +22,35 @@ interface ClickUpTarefa {
   date_updated: string;
 }
 
-export interface ListaClickUp {
-  espacoNome: string;
-  pastaNome: string | null;
-  listaId: string;
-  listaNome: string;
+export interface ClienteCandidatoClickUp {
+  tarefaId: string;
+  nome: string;
 }
 
 /**
- * O ClickUp não tem uma entidade "cliente" de primeira classe no escritório —
- * na prática, cada Lista (dentro de uma Pasta, dentro de um Espaço) representa
- * um cliente. Achata essa hierarquia para alimentar a tela de reconciliação.
+ * O ClickUp não tem uma entidade "cliente" de primeira classe no workspace —
+ * na prática, o cadastro de clientes é a Lista "Clientes" (ver
+ * CLICKUP_LISTA_CLIENTES_ID): cada cliente é uma tarefa dentro dela. As
+ * demais Listas do workspace são fluxo de trabalho interno por matéria/área
+ * (Cível, Trabalhista, Marketing, OKRs etc.) — não são clientes, e listá-las
+ * como candidato já gerou entradas erradas na tela de reconciliação.
  */
-export async function listarListasComoClientesCandidatos(): Promise<ListaClickUp[]> {
-  const workspaceId = process.env.CLICKUP_WORKSPACE_ID;
-  if (!workspaceId) throw new Error('CLICKUP_WORKSPACE_ID não configurado.');
+export async function listarClientesCandidatosClickUp(): Promise<ClienteCandidatoClickUp[]> {
+  const listaClientesId = process.env.CLICKUP_LISTA_CLIENTES_ID;
+  if (!listaClientesId) throw new Error('CLICKUP_LISTA_CLIENTES_ID não configurado.');
 
-  const { spaces } = await chamarClickUp<{ spaces: ClickUpEspaco[] }>(`/team/${workspaceId}/space?archived=false`);
-
-  const porEspaco = await mapComLimite(spaces, 5, async (espaco) => {
-    const listasDoEspaco: ListaClickUp[] = [];
-    const { folders } = await chamarClickUp<{ folders: ClickUpPasta[] }>(`/space/${espaco.id}/folder?archived=false`);
-    for (const pasta of folders) {
-      for (const lista of pasta.lists) {
-        listasDoEspaco.push({ espacoNome: espaco.name, pastaNome: pasta.name, listaId: lista.id, listaNome: lista.name });
-      }
-    }
-
-    const { lists: listasSemPasta } = await chamarClickUp<{ lists: ClickUpLista[] }>(
-      `/space/${espaco.id}/list?archived=false`
+  const candidatos: ClienteCandidatoClickUp[] = [];
+  let page = 0;
+  for (;;) {
+    const { tasks } = await chamarClickUp<{ tasks: { id: string; name: string }[] }>(
+      `/list/${listaClientesId}/task?archived=false&include_closed=true&page=${page}`
     );
-    for (const lista of listasSemPasta) {
-      listasDoEspaco.push({ espacoNome: espaco.name, pastaNome: null, listaId: lista.id, listaNome: lista.name });
-    }
-    return listasDoEspaco;
-  });
-
-  return porEspaco.flat();
+    if (tasks.length === 0) break;
+    candidatos.push(...tasks.map((t) => ({ tarefaId: t.id, nome: t.name })));
+    if (tasks.length < 100) break;
+    page++;
+  }
+  return candidatos;
 }
 
 /** Demandas em andamento de uma lista (cliente), para vincular cada minuta à sua task. */

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { listarListasComoClientesCandidatos } from '@/lib/integrations/clickup';
+import { listarClientesCandidatosClickUp } from '@/lib/integrations/clickup';
 import { listarPastasDeClientes } from '@/lib/integrations/google-drive';
 import { sincronizarFontesReconciliacao } from '@/lib/services/reconciliacao';
 import { criarClienteAdmin } from '@/lib/supabase/admin';
@@ -31,20 +31,20 @@ async function sincronizar(request: Request) {
 
   const admin = criarClienteAdmin();
 
-  const [pastasDrive, listasClickUp] = await Promise.all([
+  const [pastasDrive, clientesClickUp] = await Promise.all([
     listarPastasDeClientes().catch((erro) => {
       console.error('Falha ao ler pastas de clientes no Google Drive:', erro);
       return [];
     }),
-    listarListasComoClientesCandidatos().catch((erro) => {
-      console.error('Falha ao ler listas de clientes no ClickUp:', erro);
+    listarClientesCandidatosClickUp().catch((erro) => {
+      console.error('Falha ao ler clientes candidatos no ClickUp:', erro);
       return [];
     }),
   ]);
 
   const { inseridas, atualizadas } = await sincronizarFontesReconciliacao(admin, {
     googleDrive: pastasDrive,
-    clickUp: listasClickUp,
+    clickUp: clientesClickUp,
   });
 
   if (inseridas > 0) {
@@ -61,7 +61,7 @@ async function sincronizar(request: Request) {
     }
   }
 
-  return NextResponse.json({ candidatosLidosDrive: pastasDrive.length, candidatosLidosClickUp: listasClickUp.length, inseridas, atualizadas });
+  return NextResponse.json({ candidatosLidosDrive: pastasDrive.length, candidatosLidosClickUp: clientesClickUp.length, inseridas, atualizadas });
 }
 
 export async function GET(request: Request) {

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PastaClienteDrive } from '@/lib/integrations/google-drive';
-import type { ListaClickUp } from '@/lib/integrations/clickup';
+import type { ClienteCandidatoClickUp } from '@/lib/integrations/clickup';
 import type { FonteReconciliacaoRow } from '@/types/database.types';
 import { mapComLimite } from '@/lib/utils/concorrencia';
 
@@ -57,7 +57,7 @@ async function gravarCandidato(
 
 export async function sincronizarFontesReconciliacao(
   adminClient: SupabaseClient,
-  fontes: { googleDrive?: PastaClienteDrive[]; clickUp?: ListaClickUp[] }
+  fontes: { googleDrive?: PastaClienteDrive[]; clickUp?: ClienteCandidatoClickUp[] }
 ): Promise<{ inseridas: number; atualizadas: number }> {
   // Cada candidato já passou de 100 no Drive de produção — sequencial (um de
   // cada vez) estoura o tempo de resposta. 10 em paralelo é rápido sem
@@ -72,8 +72,8 @@ export async function sincronizarFontesReconciliacao(
     )
   );
 
-  const resultadosClickUp = await mapComLimite(fontes.clickUp ?? [], 10, (lista) =>
-    gravarCandidato(adminClient, lista.listaNome, 'clickup', lista.listaId, { espaco: lista.espacoNome, pasta: lista.pastaNome })
+  const resultadosClickUp = await mapComLimite(fontes.clickUp ?? [], 10, (candidato) =>
+    gravarCandidato(adminClient, candidato.nome, 'clickup', candidato.tarefaId, {})
   );
 
   const todos = [...resultadosDrive, ...resultadosClickUp];
