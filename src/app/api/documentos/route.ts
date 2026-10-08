@@ -8,6 +8,21 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { criarDocumento, listarDocumentos } from '@/lib/services/documentos';
 import type { CategoriaSinalizacao } from '@/types/database.types';
 
+// O Storage rejeita chave com acento, travessão, parênteses etc. ("Invalid key").
+// O nome original continua guardado em arquivo_original_nome pra exibição.
+function nomeSeguroParaStorage(nome: string): string {
+  const ponto = nome.lastIndexOf('.');
+  const base = ponto > 0 ? nome.slice(0, ponto) : nome;
+  const extensao = ponto > 0 ? nome.slice(ponto).toLowerCase().replace(/[^a-z0-9.]/g, '') : '';
+  const baseLimpa = base
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Za-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 120);
+  return `${baseLimpa || 'arquivo'}${extensao}`;
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await criarClienteServidor();
@@ -68,7 +83,7 @@ export async function POST(request: Request) {
       // Upload feito com a service role: o bucket é privado e nunca é acessado
       // direto pelo cliente (ver comentário na migração de storage).
       const documentoId = randomUUID();
-      const path = `${documentoId}/${arquivo.name}`;
+      const path = `${documentoId}/${nomeSeguroParaStorage(arquivo.name)}`;
       const admin = criarClienteAdmin();
       const { error: erroUpload } = await admin.storage.from('minutas-originais').upload(path, buffer, {
         contentType: arquivo.type,
