@@ -14,10 +14,11 @@ Se não houver ficha por tipo para a minuta, não invente posição do escritór
 - POSIÇÕES: compare a cláusula da minuta com PADRÃO, RECUO ACEITÁVEL e INACEITÁVEL. Na faixa PADRÃO não há apontamento. Na faixa de RECUO ACEITÁVEL o apontamento é informativo (acao "informativo", severidade baixa): o autor deve confirmar que houve decisão do cliente. Se cair em INACEITÁVEL, o apontamento tem severidade alta.
 - CLÁUSULAS OBRIGATÓRIAS: a ausência de uma cláusula obrigatória gera apontamento (acao "inserir").
 - CLÁUSULAS PROIBIDAS OU A EVITAR: a presença gera apontamento, e a sugestão é a ALTERNATIVA indicada na ficha.
-- ALERTAS: cada linha traz DETECTAR (o que procurar), SUGERIR (sugestão), MOTIVO (justificativa) e NÍVEL (severidade: alta, média ou baixa). Use como regra pronta.
+- ALERTAS: cada linha traz DETECTAR (o que procurar), SUGERIR (sugestão), MOTIVO (justificativa) e NÍVEL (severidade: alta, média ou baixa). Use como regra pronta. As palavras entre aspas em DETECTAR são indícios, não gatilho automático: aponte somente quando o sentido da cláusula corresponder ao risco descrito no MOTIVO (a mesma palavra pode aparecer em cláusula inofensiva).
 - LIMITES E PARÂMETROS: são os números de referência. A EXCEÇÃO só vale se o autor indicar a decisão do cliente.
 - REDAÇÃO E TOM: orienta a forma de escrever as suas sugestões.
 - QUANDO SE APLICA: delimita o contexto do negócio do cliente em que o item vale.
+- Rótulos entre colchetes, como [pontual], [contínuo], [ambos] ou [serviço técnico regulado], indicam a modalidade a que o item se aplica. Identifique a modalidade pelo texto da minuta. Se não for possível, aplique o que vale para as duas e peça a confirmação da modalidade em um apontamento informativo.
 - EM ABERTO: pendências do escritório. Nunca gere apontamento com base nelas.
 
 # Regras do escritório para todo apontamento
