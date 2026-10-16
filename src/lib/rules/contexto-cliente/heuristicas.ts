@@ -165,11 +165,46 @@ const prazoSigiloAbaixoDoMinimo: Heuristica = (clausula, { cliente, contratosAnt
   };
 };
 
+// 5. Campo de modelo deixado em branco na minuta. Os modelos de referência do escritório
+// marcam entre colchetes o que a equipe preenche em cada caso ("[razão social]", "[ ]",
+// "[data]"); minuta final com colchete aberto vai ao sócio com campo por preencher.
+// Não vale para "[sic]", reticências e remissões numéricas ("[1]").
+const MARCADOR_DE_CAMPO = /\[[^\]\n]{0,100}\]/g;
+const COLCHETE_QUE_NAO_E_CAMPO = /^\[\s*(?:sic|\.{2,}|…|\d{1,3})\s*\]$/i;
+
+const campoEmBranco: Heuristica = (clausula) => {
+  const campos = [...clausula.texto.matchAll(MARCADOR_DE_CAMPO)].filter((m) => !COLCHETE_QUE_NAO_E_CAMPO.test(m[0]));
+  if (campos.length === 0) return null;
+
+  const primeiro = campos[0];
+  const inicio = clausula.offset_inicio + primeiro.index;
+  const lista = campos.slice(0, 6).map((m) => m[0]).join(', ');
+  const resto = campos.length > 6 ? ` e mais ${campos.length - 6}` : '';
+
+  return {
+    clausula_numero: clausula.numero,
+    trecho_original: primeiro[0],
+    offset_inicio: inicio,
+    offset_fim: inicio + primeiro[0].length,
+    categoria: 'caso_cliente_generico',
+    natureza: 'contexto_negocio',
+    sugestao_ajuste: `Preencher ${campos.length === 1 ? 'o campo' : 'os campos'} ${lista}${resto} antes de enviar a minuta ao sócio.`,
+    justificativa: `Há ${campos.length} campo(s) de modelo ainda entre colchetes nesta cláusula: minuta final com campo em branco não segue para o sócio.`,
+    severidade: 'media',
+    fonte_inferencia: {
+      tipo: 'modelo_referencia',
+      detalhe: 'Modelos de referência do escritório: campos entre colchetes são preenchidos em cada caso.',
+      acao: 'informativo',
+    },
+  };
+};
+
 const HEURISTICAS: Heuristica[] = [
   representacaoComercialGenerica,
   responsabilidadePessoalComBasePJ,
   cessaoQuotasComTravaIncessibilidade,
   prazoSigiloAbaixoDoMinimo,
+  campoEmBranco,
 ];
 
 /**

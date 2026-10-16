@@ -20,10 +20,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (body.resolucao === 'aplicada') {
       const { data: existente } = await supabase.from('sinalizacoes').select('fonte_inferencia').eq('id', id).maybeSingle();
       const fonte = (existente as { fonte_inferencia: FonteInferenciaContexto | null } | null)?.fonte_inferencia;
-      // Apontamento informativo da base de conhecimento só pede confirmação do autor:
+      // Apontamento informativo (ficha ou campo em branco) só pede uma providência do autor:
       // não há texto a aplicar, então "aplicar" colaria a mensagem dentro do contrato.
-      if (fonte?.tipo === 'ficha' && fonte.acao === 'informativo') {
-        return NextResponse.json({ erro: 'Este apontamento é informativo: confirme a decisão do cliente e use "Manter".' }, { status: 422 });
+      if (fonte?.acao === 'informativo') {
+        return NextResponse.json({ erro: 'Este apontamento é informativo: faça a providência indicada na minuta e use "Resolvido".' }, { status: 422 });
       }
     }
 

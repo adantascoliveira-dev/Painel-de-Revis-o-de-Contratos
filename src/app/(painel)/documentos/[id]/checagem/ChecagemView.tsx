@@ -22,7 +22,7 @@ function SinalizacaoCard({
 }) {
   const meta = METADADOS_CATEGORIA[sinalizacao.categoria];
   const resolvida = sinalizacao.resolucao !== 'pendente';
-  const informativa = sinalizacao.fonte_inferencia?.tipo === 'ficha' && sinalizacao.fonte_inferencia.acao === 'informativo';
+  const informativa = sinalizacao.fonte_inferencia?.acao === 'informativo';
 
   return (
     <div
@@ -66,7 +66,7 @@ function SinalizacaoCard({
             style={{ fontSize: 12.5, flex: informativa ? 1 : undefined }}
             onClick={() => onResolver('mantida')}
           >
-            {informativa ? 'Confirmado com o cliente' : 'Manter'}
+            {informativa ? 'Resolvido' : 'Manter'}
           </button>
         </div>
       ) : (

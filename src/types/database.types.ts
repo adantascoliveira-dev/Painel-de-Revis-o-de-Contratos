@@ -188,10 +188,10 @@ export interface DocumentoSnapshot {
 }
 
 export type FonteInferenciaContexto = {
-  tipo: 'contrato_anterior' | 'cadastro_cliente' | 'clausula_contrato_social' | 'ficha';
+  tipo: 'contrato_anterior' | 'cadastro_cliente' | 'clausula_contrato_social' | 'ficha' | 'modelo_referencia';
   referencia_id?: string;
   detalhe: string;
-  /** Só para tipo "ficha": "informativo" não tem texto a aplicar, só pede confirmação do autor. */
+  /** "informativo" não tem texto a aplicar, só pede uma providência ou confirmação do autor. */
   acao?: 'substituir' | 'inserir' | 'informativo';
   categoria_ficha?: string;
 };

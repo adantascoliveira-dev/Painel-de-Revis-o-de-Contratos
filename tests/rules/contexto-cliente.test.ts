@@ -95,3 +95,28 @@ describe('executarHeuristicasDeContextoCliente', () => {
     expect(executarHeuristicasDeContextoCliente(texto, c, [])).toHaveLength(0);
   });
 });
+
+describe('campo em branco (modelos de referência)', () => {
+  const c = cliente({});
+
+  it('sinaliza campos entre colchetes ainda por preencher, um apontamento por cláusula, como informativo', () => {
+    const texto =
+      'CONTRATADA: [razão social], inscrita no CNPJ sob o nº [ ].\n\nCLÁUSULA 1ª. OBJETO\n1.1. Valor mensal de R$ [ ], pago até o dia 5.';
+    const candidatos = executarHeuristicasDeContextoCliente(texto, c, []).filter((x) => x.fonte_inferencia.tipo === 'modelo_referencia');
+    expect(candidatos).toHaveLength(2);
+    expect(candidatos[0].trecho_original).toBe('[razão social]');
+    expect(candidatos[0].sugestao_ajuste).toContain('[razão social], [ ]');
+    expect(candidatos[0].fonte_inferencia.acao).toBe('informativo');
+    expect(texto.slice(candidatos[0].offset_inicio, candidatos[0].offset_fim)).toBe('[razão social]');
+    expect(candidatos[1].clausula_numero).toBe('1.1');
+  });
+
+  it('ignora [sic], reticências e remissões numéricas', () => {
+    const texto = 'CLÁUSULA 1ª. OBJETO\n1.1. Conforme o parecer [1], o termo "equipe" [sic] consta no trecho [...] citado.';
+    expect(executarHeuristicasDeContextoCliente(texto, c, [])).toHaveLength(0);
+  });
+
+  it('não sinaliza minuta totalmente preenchida', () => {
+    expect(executarHeuristicasDeContextoCliente('CLÁUSULA 1ª. OBJETO\n1.1. Serviços de consultoria.', c, [])).toHaveLength(0);
+  });
+});
