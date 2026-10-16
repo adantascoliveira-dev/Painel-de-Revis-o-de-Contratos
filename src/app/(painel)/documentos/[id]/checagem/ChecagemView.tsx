@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Marca, TextoComMarcas } from '@/components/TextoComMarcas';
 import { METADADOS_CATEGORIA } from '@/lib/categorias';
 import type { ParClausulas } from '@/lib/extracao/alinhamento';
-import type { Cliente, Documento, ModeloAprovado, Sinalizacao, TipoPeca, Usuario } from '@/types/database.types';
+import type { Cliente, Documento, ModeloAprovado, ModeloParte, Sinalizacao, TipoPeca, Usuario } from '@/types/database.types';
 import { calcularContadoresChecagem } from '@/lib/services/sinalizacoes';
 
 function SinalizacaoCard({
@@ -81,12 +81,46 @@ function SinalizacaoCard({
   );
 }
 
+function ParteDoModelo({ parte }: { parte: ModeloParte }) {
+  const [copiado, setCopiado] = useState(false);
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(parte.texto);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1800);
+    } catch {
+      setCopiado(false);
+    }
+  }
+
+  return (
+    <details style={{ background: '#FFFFFF', border: '1px solid var(--color-divider)', padding: '12px 16px' }}>
+      <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600, color: '#102B4E', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        {parte.titulo}
+        <span className="tag tag-neutral">{parte.tipo === 'anexo' ? 'Anexo' : 'Módulo condicional'}</span>
+        {parte.incluir_na_exportacao ? <span className="tag tag-accent">Sai na exportação</span> : null}
+      </summary>
+      {parte.condicao ? (
+        <p style={{ margin: '10px 0 0', fontSize: 12.5, lineHeight: 1.6, color: '#6E5A08' }}>
+          {parte.tipo === 'anexo' ? parte.condicao : `Quando usar: ${parte.condicao}`}
+        </p>
+      ) : null}
+      <div style={{ marginTop: 10, whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.8, color: 'rgba(28,27,34,0.82)' }}>{parte.texto}</div>
+      <button type="button" className="btn btn-secondary" style={{ marginTop: 12, fontSize: 12.5 }} onClick={copiar}>
+        {copiado ? 'Texto copiado' : 'Copiar texto'}
+      </button>
+    </details>
+  );
+}
+
 export function ChecagemView({
   documento,
   cliente,
   tipoPeca,
   autor,
   modeloAprovado,
+  partesDoModelo,
   alinhamento,
   sinalizacoesEstiloIniciais,
   sinalizacoesContextoIniciais,
@@ -96,6 +130,7 @@ export function ChecagemView({
   tipoPeca: TipoPeca;
   autor: Usuario;
   modeloAprovado: ModeloAprovado | null;
+  partesDoModelo: ModeloParte[];
   alinhamento: ParClausulas[];
   sinalizacoesEstiloIniciais: Sinalizacao[];
   sinalizacoesContextoIniciais: Sinalizacao[];
@@ -227,7 +262,9 @@ export function ChecagemView({
         {erro ? <div style={{ marginTop: 12, fontSize: 13, color: '#93342B' }}>{erro}</div> : null}
         {!modeloAprovado ? (
           <div style={{ marginTop: 12, fontSize: 13, color: '#6E5A08' }}>
-            Nenhum modelo aprovado para este tipo de peça — a checagem seguiu só com as regras do guia de estilo.
+            {documento.modalidade === 'pontual'
+              ? 'Modalidade pontual identificada: ainda não há modelo aprovado para ela, então não houve comparação de estrutura. Seguiram as checagens de estilo e da ficha.'
+              : 'Sem modelo aprovado para este tipo de peça (modelos de outros clientes não são reaproveitados): não houve comparação de estrutura. Seguiram as checagens de estilo e da ficha.'}
           </div>
         ) : null}
       </header>
@@ -247,7 +284,7 @@ export function ChecagemView({
           </div>
           <div style={{ padding: '26px 24px 34px', fontSize: 13.5, lineHeight: 1.85, color: 'rgba(28,27,34,0.82)' }}>
             {!modeloAprovado ? (
-              'Sem modelo aprovado para comparar — a checagem rodou só com as regras do guia de estilo.'
+              'Sem modelo aprovado para comparar: a checagem rodou sem comparação de estrutura, só com as regras de estilo e a ficha.'
             ) : alinhamento.length === 0 ? (
               <div style={{ whiteSpace: 'pre-wrap' }}>{modeloAprovado.texto}</div>
             ) : (
@@ -343,6 +380,22 @@ export function ChecagemView({
           </div>
         </aside>
       </div>
+
+      {partesDoModelo.length > 0 ? (
+        <section style={{ padding: '24px 28px 40px' }}>
+          <div style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7A6A65', fontWeight: 600, marginBottom: 6 }}>
+            Módulos e anexos do modelo
+          </div>
+          <p style={{ margin: '0 0 14px', fontSize: 12.5, color: 'var(--color-muted)', maxWidth: '70ch' }}>
+            Os módulos condicionais só entram na minuta quando a condição indicada se verifica e nunca geram &quot;cláusula ausente&quot;. Os anexos marcados saem junto na exportação da minuta.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 900 }}>
+            {partesDoModelo.map((parte) => (
+              <ParteDoModelo key={parte.id} parte={parte} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

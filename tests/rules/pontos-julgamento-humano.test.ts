@@ -25,6 +25,7 @@ function documento(texto: string): Documento {
     clickup_task_id: null,
     subtipo: null,
     polo: null,
+    modalidade: null,
     criado_em: new Date().toISOString(),
     atualizado_em: new Date().toISOString(),
   };

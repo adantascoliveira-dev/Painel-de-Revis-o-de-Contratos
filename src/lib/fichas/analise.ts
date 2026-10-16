@@ -152,6 +152,7 @@ export async function analisarMinutaComFichas(
         tipoPeca: contexto.nomeTipoPeca,
         subtipo: documento.subtipo,
         polo: documento.polo,
+        modalidade: documento.modalidade,
         cliente: contexto.nomeCliente,
         texto: documento.texto_trabalho,
       }),

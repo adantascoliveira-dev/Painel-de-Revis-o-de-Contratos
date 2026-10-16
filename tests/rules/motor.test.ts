@@ -171,3 +171,22 @@ describe('detectarClausulasAusentes — categoria 6', () => {
     expect(detectarClausulasAusentes([], [clausula('1', 'texto', 0)], regraClausulasAusentes)).toHaveLength(0);
   });
 });
+
+describe('detectarClausulasAusentes com cláusula condicional do modelo', () => {
+  const regra = {
+    id: 'r1', categoria: 'clausulas_ausentes', nome: 'Cláusulas ausentes', padrao_deteccao: { tipo: 'comparacao_com_modelo' }, severidade_default: 'media',
+  } as unknown as Parameters<typeof detectarClausulasAusentes>[2];
+  const base = { titulo: 't', offset_inicio: 0, offset_fim: 10 };
+
+  it('não aponta como ausente a cláusula marcada como condicional, mas aponta as demais', () => {
+    const modelo = [
+      { numero: '4.1', texto: 'Vigência de 12 meses.', ...base },
+      { numero: '4.2', texto: 'Ratificação dos serviços anteriores.', ...base, condicional: { condicao: 'só se o serviço começou antes da assinatura' } },
+      { numero: '4.3', texto: 'Foro.', ...base },
+    ];
+    const minuta = [{ numero: '4.1', texto: 'Vigência de 12 meses.', ...base }];
+    const ausentes = detectarClausulasAusentes(modelo, minuta, regra).map((c) => c.justificativa);
+    expect(ausentes).toHaveLength(1);
+    expect(ausentes[0]).toContain('4.3');
+  });
+});

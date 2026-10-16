@@ -3,7 +3,7 @@ import { alinharClausulas } from '@/lib/extracao/alinhamento';
 import { buscarDocumento } from '@/lib/services/documentos';
 import { listarSinalizacoes } from '@/lib/services/sinalizacoes';
 import { criarClienteServidor } from '@/lib/supabase/server';
-import type { Cliente, ModeloAprovado, TipoPeca, Usuario } from '@/types/database.types';
+import type { Cliente, ModeloAprovado, ModeloParte, TipoPeca, Usuario } from '@/types/database.types';
 import { ChecagemView } from './ChecagemView';
 
 export default async function ChecagemPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,10 +13,13 @@ export default async function ChecagemPage({ params }: { params: Promise<{ id: s
   const documento = await buscarDocumento(supabase, id);
   if (!documento) notFound();
 
-  const [modeloResp, sinalizacoes, clienteResp, tipoPecaResp, autorResp] = await Promise.all([
+  const [modeloResp, partesResp, sinalizacoes, clienteResp, tipoPecaResp, autorResp] = await Promise.all([
     documento.modelo_aprovado_id
       ? supabase.from('modelos_aprovados').select('*').eq('id', documento.modelo_aprovado_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    documento.modelo_aprovado_id
+      ? supabase.from('modelo_partes').select('*').eq('modelo_id', documento.modelo_aprovado_id).order('ordem')
+      : Promise.resolve({ data: [] }),
     listarSinalizacoes(supabase, id),
     supabase.from('clientes').select('*').eq('id', documento.cliente_id).single(),
     supabase.from('tipos_peca').select('*').eq('id', documento.tipo_peca_id).single(),
@@ -33,6 +36,7 @@ export default async function ChecagemPage({ params }: { params: Promise<{ id: s
       tipoPeca={tipoPecaResp.data as TipoPeca}
       autor={autorResp.data as Usuario}
       modeloAprovado={modeloAprovado}
+      partesDoModelo={(partesResp.data ?? []) as ModeloParte[]}
       alinhamento={alinhamento}
       sinalizacoesEstiloIniciais={sinalizacoes.filter((s) => s.natureza === 'estilo')}
       sinalizacoesContextoIniciais={sinalizacoes.filter((s) => s.natureza === 'contexto_negocio')}

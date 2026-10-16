@@ -122,6 +122,22 @@ export interface Clausula {
   texto: string;
   offset_inicio: number;
   offset_fim: number;
+  /** Cláusula de modelo exigida só quando a condição se verifica: a comparação de estrutura nunca a aponta como ausente. */
+  condicional?: { condicao: string };
+}
+
+export type ModalidadeContrato = 'pontual' | 'continuo';
+
+export interface ModeloParte {
+  id: string;
+  modelo_id: string;
+  tipo: 'modulo_condicional' | 'anexo';
+  codigo: string;
+  titulo: string;
+  condicao: string | null;
+  texto: string;
+  incluir_na_exportacao: boolean;
+  ordem: number;
 }
 
 export interface ModeloAprovado {
@@ -129,6 +145,7 @@ export interface ModeloAprovado {
   codigo: string;
   tipo_peca_id: string;
   cliente_id: string | null;
+  modalidade: ModalidadeContrato | null;
   texto: string;
   clausulas: Clausula[];
   documento_origem_id: string | null;
@@ -162,6 +179,7 @@ export interface Documento {
   clickup_task_id: string | null;
   subtipo: string | null;
   polo: string | null;
+  modalidade: ModalidadeContrato | null;
   criado_em: string;
   atualizado_em: string;
 }

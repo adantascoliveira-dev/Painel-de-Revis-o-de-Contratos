@@ -213,6 +213,9 @@ export function detectarClausulasAusentes(
       continue;
     }
     if (!par.clausulaModelo) continue;
+    // Cláusula condicional do modelo (ex.: ratificação de serviço anterior à assinatura): só vale
+    // quando a condição se verifica, e isso é decidido pela análise da ficha, nunca por estrutura.
+    if (par.clausulaModelo.condicional) continue;
 
     candidatos.push({
       trecho_original: '',

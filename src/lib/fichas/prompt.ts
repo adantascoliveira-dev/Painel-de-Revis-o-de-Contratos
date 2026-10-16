@@ -66,6 +66,7 @@ export interface DadosDaMinuta {
   tipoPeca: string;
   subtipo: string | null;
   polo: string | null;
+  modalidade: string | null;
   cliente: string;
   texto: string;
 }
@@ -76,6 +77,7 @@ export function montarMensagemDaMinuta(dados: DadosDaMinuta): string {
     `Tipo de peça: ${dados.tipoPeca}`,
     `Subtipo: ${dados.subtipo ?? 'não informado'}`,
     `Polo do cliente: ${dados.polo ?? 'não informado'}`,
+    `Modalidade (identificada automaticamente pelo painel; confirme pelo texto): ${dados.modalidade ?? 'não identificada'}`,
     `Cliente: ${dados.cliente}`,
     '',
     'Minuta a revisar (cite trechos exatamente como aparecem aqui):',

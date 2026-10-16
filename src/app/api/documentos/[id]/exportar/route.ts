@@ -4,7 +4,7 @@ import { exigirUsuarioAtual } from '@/lib/auth/usuario-atual';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { buscarDocumento } from '@/lib/services/documentos';
 import { gerarDocxDocumento, gerarPdfDocumento } from '@/lib/services/exportacao';
-import type { Cliente, TipoPeca } from '@/types/database.types';
+import type { Cliente, ModeloParte, TipoPeca } from '@/types/database.types';
 
 function nomeArquivo(titulo: string, extensao: string): string {
   const slug = titulo
@@ -32,16 +32,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ erro: 'formato deve ser "docx" ou "pdf".' }, { status: 400 });
     }
 
-    const [{ data: cliente }, { data: tipoPeca }] = await Promise.all([
+    const [{ data: cliente }, { data: tipoPeca }, { data: partes }] = await Promise.all([
       supabase.from('clientes').select('nome').eq('id', documento.cliente_id).single(),
       supabase.from('tipos_peca').select('nome').eq('id', documento.tipo_peca_id).single(),
+      documento.modelo_aprovado_id
+        ? supabase.from('modelo_partes').select('titulo, texto').eq('modelo_id', documento.modelo_aprovado_id).eq('incluir_na_exportacao', true).order('ordem')
+        : Promise.resolve({ data: [] }),
     ]);
+    // Anexos do modelo (ex.: protocolo de gestão do contrato contínuo) saem junto da minuta.
+    const anexos = ((partes ?? []) as Pick<ModeloParte, 'titulo' | 'texto'>[]).map((p) => ({ titulo: p.titulo, texto: p.texto }));
 
     const statusRotulo = documento.status === 'aprovado' ? 'Aprovado' : 'Versão de trabalho — não aprovada';
     const subtitulo = `${(tipoPeca as Pick<TipoPeca, 'nome'> | null)?.nome ?? ''} · ${(cliente as Pick<Cliente, 'nome'> | null)?.nome ?? ''} · v${documento.versao} · ${statusRotulo}`;
 
     if (formato === 'docx') {
-      const buffer = await gerarDocxDocumento({ titulo: documento.titulo, subtitulo, texto: documento.texto_trabalho });
+      const buffer = await gerarDocxDocumento({ titulo: documento.titulo, subtitulo, texto: documento.texto_trabalho, anexos });
       return new NextResponse(new Uint8Array(buffer), {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -50,7 +55,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       });
     }
 
-    const buffer = await gerarPdfDocumento({ titulo: documento.titulo, subtitulo, texto: documento.texto_trabalho });
+    const buffer = await gerarPdfDocumento({ titulo: documento.titulo, subtitulo, texto: documento.texto_trabalho, anexos });
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/pdf',
