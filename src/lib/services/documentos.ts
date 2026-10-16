@@ -10,6 +10,8 @@ export interface CriarDocumentoInput {
   autorId: string;
   socioRevisorId: string;
   categoriasHabilitadas: CategoriaSinalizacao[];
+  subtipo?: string | null;
+  polo?: string | null;
   arquivoOriginal?: {
     path: string;
     nome: string;
@@ -55,6 +57,8 @@ export async function criarDocumento(
       socio_revisor_id: input.socioRevisorId,
       modelo_aprovado_id: modeloId ?? null,
       categorias_checagem_habilitadas: input.categoriasHabilitadas,
+      subtipo: input.subtipo ?? null,
+      polo: input.polo ?? null,
       status: 'rascunho',
       arquivo_original_path: input.arquivoOriginal?.path ?? null,
       arquivo_original_nome: input.arquivoOriginal?.nome ?? null,

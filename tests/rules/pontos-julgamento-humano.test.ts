@@ -23,6 +23,8 @@ function documento(texto: string): Documento {
     documento_pai_id: null,
     categorias_checagem_habilitadas: [],
     clickup_task_id: null,
+    subtipo: null,
+    polo: null,
     criado_em: new Date().toISOString(),
     atualizado_em: new Date().toISOString(),
   };

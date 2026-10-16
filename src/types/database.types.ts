@@ -160,6 +160,8 @@ export interface Documento {
   documento_pai_id: string | null;
   categorias_checagem_habilitadas: CategoriaSinalizacao[];
   clickup_task_id: string | null;
+  subtipo: string | null;
+  polo: string | null;
   criado_em: string;
   atualizado_em: string;
 }
@@ -186,10 +188,31 @@ export interface DocumentoSnapshot {
 }
 
 export type FonteInferenciaContexto = {
-  tipo: 'contrato_anterior' | 'cadastro_cliente' | 'clausula_contrato_social';
+  tipo: 'contrato_anterior' | 'cadastro_cliente' | 'clausula_contrato_social' | 'ficha';
   referencia_id?: string;
   detalhe: string;
+  /** Só para tipo "ficha": "informativo" não tem texto a aplicar, só pede confirmação do autor. */
+  acao?: 'substituir' | 'inserir' | 'informativo';
+  categoria_ficha?: string;
 };
+
+export type EscopoFicha = 'tipo' | 'cliente' | 'transversal';
+
+export interface FichaConhecimento {
+  id: string;
+  escopo: EscopoFicha;
+  titulo: string;
+  tipo_peca_id: string | null;
+  subtipo: string | null;
+  polo: string | null;
+  cliente_id: string | null;
+  conteudo_md: string;
+  validada_por: string | null;
+  validada_em: string | null;
+  ativa: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
 
 export interface Sinalizacao {
   id: string;

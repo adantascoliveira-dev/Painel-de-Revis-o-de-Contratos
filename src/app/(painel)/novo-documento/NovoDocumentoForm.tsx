@@ -12,6 +12,23 @@ const ROTULO_GRUPO_CLIENTE: Record<TipoCliente, string> = {
   pessoa_fisica: 'Pessoas físicas',
 };
 
+export interface FichaPorTipo {
+  tipo_peca_id: string;
+  subtipo: string | null;
+  polo: string | null;
+}
+
+const SEPARADOR_FICHA = '||';
+
+function chaveDaFicha(f: { subtipo: string | null; polo: string | null }): string {
+  return `${f.subtipo ?? ''}${SEPARADOR_FICHA}${f.polo ?? ''}`;
+}
+
+function rotuloDaFicha(f: { subtipo: string | null; polo: string | null }): string {
+  const partes = [f.subtipo ?? 'Geral', ...(f.polo ? [`cliente como ${f.polo}`] : [])];
+  return partes.join(', ');
+}
+
 function agruparPorChave<T>(itens: T[], chave: (item: T) => string): Map<string, T[]> {
   const mapa = new Map<string, T[]>();
   for (const item of itens) {
@@ -29,6 +46,7 @@ export function NovoDocumentoForm({
   socios,
   versaoGuia,
   totalModelosAprovados,
+  fichasPorTipo,
 }: {
   usuarioAtual: Usuario;
   tiposPeca: TipoPeca[];
@@ -37,6 +55,7 @@ export function NovoDocumentoForm({
   socios: Usuario[];
   versaoGuia: string | null;
   totalModelosAprovados: number;
+  fichasPorTipo: FichaPorTipo[];
 }) {
   const router = useRouter();
   const inputArquivoRef = useRef<HTMLInputElement>(null);
@@ -52,6 +71,15 @@ export function NovoDocumentoForm({
   const [categorias, setCategorias] = useState<Set<CategoriaSinalizacao>>(
     new Set(TODAS_AS_CATEGORIAS.filter((c) => c.marcadaPorPadrao).map((c) => c.valor))
   );
+  const fichasDoTipo = useMemo(() => fichasPorTipo.filter((f) => f.tipo_peca_id === tipoPecaId), [fichasPorTipo, tipoPecaId]);
+  const [fichaEscolhida, setFichaEscolhida] = useState<{ tipoPecaId: string; chave: string }>({ tipoPecaId: '', chave: '' });
+  // Com uma única ficha para o tipo, ela já vale; com várias, o autor escolhe subtipo e polo.
+  const fichaAtual =
+    fichaEscolhida.tipoPecaId === tipoPecaId
+      ? fichaEscolhida.chave
+      : fichasDoTipo.length === 1
+        ? chaveDaFicha(fichasDoTipo[0])
+        : '';
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -85,6 +113,11 @@ export function NovoDocumentoForm({
       formData.set('socioRevisorId', socioRevisorId);
       formData.set('autorId', autorId);
       formData.set('categoriasHabilitadas', JSON.stringify([...categorias]));
+      if (fichaAtual) {
+        const [subtipo, polo] = fichaAtual.split(SEPARADOR_FICHA);
+        if (subtipo) formData.set('subtipo', subtipo);
+        if (polo) formData.set('polo', polo);
+      }
       if (modo === 'upload' && arquivo) formData.set('arquivo', arquivo);
       if (modo === 'paste') formData.set('textoColado', textoColado);
 
@@ -256,6 +289,28 @@ export function NovoDocumentoForm({
               ))}
             </select>
           </div>
+
+          {fichasDoTipo.length > 0 ? (
+            <div className="field">
+              <label htmlFor="fichaAplicavel">Subtipo e polo (ficha validada)</label>
+              <select
+                id="fichaAplicavel"
+                className="input"
+                style={{ background: '#FFFFFF' }}
+                value={fichaAtual}
+                onChange={(e) => setFichaEscolhida({ tipoPecaId, chave: e.target.value })}
+              >
+                <option value="">Nenhum (sem ficha por tipo)</option>
+                {fichasDoTipo.map((f) => (
+                  <option key={chaveDaFicha(f)} value={chaveDaFicha(f)}>
+                    {rotuloDaFicha(f)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div style={{ fontSize: 12.5, color: 'var(--color-muted)' }}>Sem ficha validada para este tipo de peça.</div>
+          )}
 
           <div className="field">
             <label htmlFor="cliente">Cliente relacionado</label>

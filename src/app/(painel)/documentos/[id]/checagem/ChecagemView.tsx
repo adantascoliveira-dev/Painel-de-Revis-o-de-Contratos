@@ -22,6 +22,7 @@ function SinalizacaoCard({
 }) {
   const meta = METADADOS_CATEGORIA[sinalizacao.categoria];
   const resolvida = sinalizacao.resolucao !== 'pendente';
+  const informativa = sinalizacao.fonte_inferencia?.tipo === 'ficha' && sinalizacao.fonte_inferencia.acao === 'informativo';
 
   return (
     <div
@@ -42,7 +43,7 @@ function SinalizacaoCard({
         ) : null}
       </div>
       {sinalizacao.trecho_original ? (
-        <div style={{ fontSize: 12.5, lineHeight: 1.6, color: 'rgba(28,27,34,0.65)', textDecoration: 'line-through', marginBottom: 6 }}>
+        <div style={{ fontSize: 12.5, lineHeight: 1.6, color: 'rgba(28,27,34,0.65)', textDecoration: informativa ? 'none' : 'line-through', marginBottom: 6 }}>
           {sinalizacao.trecho_original}
         </div>
       ) : null}
@@ -54,11 +55,18 @@ function SinalizacaoCard({
       </div>
       {!resolvida ? (
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }} onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="btn btn-primary" style={{ flex: 1, fontSize: 12.5 }} onClick={() => onResolver('aplicada')}>
-            Aplicar ajuste
-          </button>
-          <button type="button" className="btn btn-secondary" style={{ fontSize: 12.5 }} onClick={() => onResolver('mantida')}>
-            Manter
+          {informativa ? null : (
+            <button type="button" className="btn btn-primary" style={{ flex: 1, fontSize: 12.5 }} onClick={() => onResolver('aplicada')}>
+              Aplicar ajuste
+            </button>
+          )}
+          <button
+            type="button"
+            className={informativa ? 'btn btn-primary' : 'btn btn-secondary'}
+            style={{ fontSize: 12.5, flex: informativa ? 1 : undefined }}
+            onClick={() => onResolver('mantida')}
+          >
+            {informativa ? 'Confirmado com o cliente' : 'Manter'}
           </button>
         </div>
       ) : (

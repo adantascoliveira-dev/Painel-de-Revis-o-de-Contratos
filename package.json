@@ -12,6 +12,7 @@
     "testar:fluxo": "node scripts/testar-fluxo.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
     "docx": "^9.7.1",

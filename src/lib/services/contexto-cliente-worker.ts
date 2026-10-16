@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { analisarMinutaComFichas, resumirParaNotificacao } from '@/lib/fichas/analise';
 import { executarHeuristicasDeContextoCliente } from '@/lib/rules/contexto-cliente/heuristicas';
 import type { Cliente, ClienteContratoAnterior, Documento } from '@/types/database.types';
 
@@ -87,20 +88,29 @@ export async function processarProximoJobContextoCliente(adminClient: SupabaseCl
       if (erroInsert) throw erroInsert;
     }
 
+    // Base de conhecimento (fichas validadas): roda depois das heurísticas, que apagam os
+    // pendentes de contexto antes de inserir os seus. Nunca lança; falha vira status no resumo.
+    const { data: tipoPeca } = await adminClient.from('tipos_peca').select('nome').eq('id', doc.tipo_peca_id).maybeSingle();
+    const ficha = await analisarMinutaComFichas(adminClient, doc, {
+      nomeCliente: (cliente as Cliente).nome,
+      nomeTipoPeca: (tipoPeca as { nome: string } | null)?.nome ?? '',
+    });
+    const totalGerado = candidatos.length + ficha.apontamentosGerados;
+
     await adminClient.from('notificacoes').insert({
       usuario_id: doc.autor_id,
       documento_id: doc.id,
       tipo: 'analise_contexto_concluida',
       titulo: 'Análise de contexto do cliente concluída',
-      corpo: `${candidatos.length} ponto(s) de contexto encontrado(s) em "${doc.titulo}".`,
+      corpo: `${candidatos.length} ponto(s) de contexto encontrado(s) em "${doc.titulo}".${resumirParaNotificacao(ficha)}`,
     });
 
     await adminClient.rpc('concluir_job_contexto_cliente', {
       p_job_id: job.id,
-      p_resultado_resumo: { sinalizacoes_geradas: candidatos.length },
+      p_resultado_resumo: { sinalizacoes_geradas: totalGerado, ficha },
     });
 
-    return { job, sinalizacoesGeradas: candidatos.length };
+    return { job, sinalizacoesGeradas: totalGerado };
   } catch (erro) {
     await adminClient.rpc('falhar_job_contexto_cliente', {
       p_job_id: job.id,

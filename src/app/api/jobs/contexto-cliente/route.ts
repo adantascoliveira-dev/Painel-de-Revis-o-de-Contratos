@@ -4,6 +4,12 @@ import { processarProximoJobContextoCliente } from '@/lib/services/contexto-clie
 
 const MAXIMO_JOBS_POR_CHAMADA = 20;
 
+// A análise por ficha chama um modelo de IA e pode levar mais de um minuto por minuta.
+// 300s é o teto do plano; não se inicia outro job depois de 60s pra que um job lento
+// (limitado a 200s pelo timeout da chamada) nunca estoure o teto e fique preso em "processando".
+export const maxDuration = 300;
+const NAO_INICIAR_NOVO_JOB_APOS_MS = 60_000;
+
 // CRON_SECRET é o nome que a própria Vercel usa por convenção: se uma env var
 // com esse nome existir no projeto, toda chamada disparada pelo Cron da Vercel
 // já chega com "Authorization: Bearer <CRON_SECRET>" preenchido automaticamente
@@ -29,9 +35,11 @@ async function processarFila(request: Request) {
   }
 
   const admin = criarClienteAdmin();
+  const inicio = Date.now();
   const processados: { documentoId: string; sinalizacoesGeradas: number }[] = [];
 
   for (let i = 0; i < MAXIMO_JOBS_POR_CHAMADA; i++) {
+    if (Date.now() - inicio > NAO_INICIAR_NOVO_JOB_APOS_MS) break;
     const resultado = await processarProximoJobContextoCliente(admin).catch((erro) => {
       console.error('Falha ao processar job de contexto do cliente:', erro);
       return undefined;

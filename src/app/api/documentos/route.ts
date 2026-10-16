@@ -23,6 +23,10 @@ function nomeSeguroParaStorage(nome: string): string {
   return `${baseLimpa || 'arquivo'}${extensao}`;
 }
 
+function textoOpcional(valor: FormDataEntryValue | null): string | null {
+  return typeof valor === 'string' && valor.trim() ? valor.trim() : null;
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await criarClienteServidor();
@@ -62,6 +66,8 @@ export async function POST(request: Request) {
     const categoriasHabilitadas = JSON.parse(
       String(formData.get('categoriasHabilitadas') ?? '[]')
     ) as CategoriaSinalizacao[];
+    const subtipo = textoOpcional(formData.get('subtipo'));
+    const polo = textoOpcional(formData.get('polo'));
     const arquivo = formData.get('arquivo');
     const textoColado = formData.get('textoColado');
 
@@ -105,6 +111,8 @@ export async function POST(request: Request) {
       autorId,
       socioRevisorId,
       categoriasHabilitadas,
+      subtipo,
+      polo,
       arquivoOriginal,
     });
 
