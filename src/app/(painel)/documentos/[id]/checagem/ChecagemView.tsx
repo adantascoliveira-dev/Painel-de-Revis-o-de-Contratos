@@ -81,6 +81,12 @@ function SinalizacaoCard({
   );
 }
 
+const ROTULO_TIPO_PARTE: Record<ModeloParte['tipo'], string> = {
+  modulo_condicional: 'Módulo condicional',
+  anexo: 'Anexo',
+  nota: 'Nota para a equipe',
+};
+
 function ParteDoModelo({ parte }: { parte: ModeloParte }) {
   const [copiado, setCopiado] = useState(false);
 
@@ -98,12 +104,12 @@ function ParteDoModelo({ parte }: { parte: ModeloParte }) {
     <details style={{ background: '#FFFFFF', border: '1px solid var(--color-divider)', padding: '12px 16px' }}>
       <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600, color: '#102B4E', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         {parte.titulo}
-        <span className="tag tag-neutral">{parte.tipo === 'anexo' ? 'Anexo' : 'Módulo condicional'}</span>
+        <span className="tag tag-neutral">{ROTULO_TIPO_PARTE[parte.tipo]}</span>
         {parte.incluir_na_exportacao ? <span className="tag tag-accent">Sai na exportação</span> : null}
       </summary>
       {parte.condicao ? (
         <p style={{ margin: '10px 0 0', fontSize: 12.5, lineHeight: 1.6, color: '#6E5A08' }}>
-          {parte.tipo === 'anexo' ? parte.condicao : `Quando usar: ${parte.condicao}`}
+          {parte.tipo === 'modulo_condicional' ? `Quando usar: ${parte.condicao}` : parte.condicao}
         </p>
       ) : null}
       <div style={{ marginTop: 10, whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.8, color: 'rgba(28,27,34,0.82)' }}>{parte.texto}</div>

@@ -131,7 +131,7 @@ export type ModalidadeContrato = 'pontual' | 'continuo';
 export interface ModeloParte {
   id: string;
   modelo_id: string;
-  tipo: 'modulo_condicional' | 'anexo';
+  tipo: 'modulo_condicional' | 'anexo' | 'nota';
   codigo: string;
   titulo: string;
   condicao: string | null;
